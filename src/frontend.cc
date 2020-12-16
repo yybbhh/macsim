@@ -895,7 +895,10 @@ int frontend_c::fetch_rr(void) {
         (KNOB(KNOB_NO_FETCH_ON_ICACHE_MISS)->getValue() &&
          !check_fetch_ready(fetch_id))) {
       ++try_again;
+      this->m_core->m_thread_sched->stall(fetch_id);
       continue;
+    } else {
+      this->m_core->m_thread_sched->unstall(fetch_id);
     }
 
     // fetch blocked, try next thread
@@ -904,7 +907,10 @@ int frontend_c::fetch_rr(void) {
       DEBUG_CORE(m_core_id, "m_core_id:%d tid:%d fetch_blocked\n", m_core_id,
                  fetch_id);
       ++try_again;
+      this->m_core->m_thread_sched->stall(fetch_id);
       continue;
+    } else {
+      this->m_core->m_thread_sched->unstall(fetch_id);
     }
 
     // check the thread is ready to fetch
@@ -916,7 +922,10 @@ int frontend_c::fetch_rr(void) {
                    fetch_id);
         if (try_again == 1) STAT_EVENT(FETCH_THREAD_SKIP_BR_WAIT);
         ++try_again;
+        this->m_core->m_thread_sched->stall(fetch_id);
         continue;
+      } else {
+        this->m_core->m_thread_sched->unstall(fetch_id);
       }
       // GPU : stall on memory policy, check whether previous memory has been serviced
       if (*m_simBase->m_knobs->KNOB_FETCH_ONLY_LOAD_READY &&
@@ -925,7 +934,10 @@ int frontend_c::fetch_rr(void) {
                    fetch_id);
         if (try_again == 1) STAT_EVENT(FETCH_THREAD_SKIP_LD_WAIT);
         ++try_again;
+        this->m_core->m_thread_sched->stall(fetch_id);
         continue;
+      } else {
+        this->m_core->m_thread_sched->unstall(fetch_id);
       }
     }
 
